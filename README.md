@@ -21,7 +21,7 @@ Test your uConsole keyboard layout and functionality with our interactive keyboa
 This web-based tool provides:
 * **Visual Feedback:** See which keys are being pressed in real-time
 * **Layer Detection:** Shows Layer 2 (Fn) key combinations
-* **D-Pad & Gamepad Testing:** Test arrow keys, joystick buttons (X, Y, A, B), and mouse buttons (L, R, Middle)
+* **D-Pad & Gamepad Testing:** Test arrow keys, joystick buttons (A, B, X, Y, Select, Start, [, ], /, 7, 8), and mouse buttons (L, R, Middle)
 * **Scroll & Cursor Tracking:** Visualize trackball movement and scroll events
 
 Perfect for verifying your firmware installation and familiarizing yourself with the uConsole's unique keyboard layout!
@@ -38,6 +38,13 @@ Perfect for verifying your firmware installation and familiarizing yourself with
 | Y      | `JS_3` (Y)      | Menu    (`KC_MENU`)
 | Select | `JS_4` (Select) | Select  (`KC_SELECT`)
 | Start  | `JS_5` (Start)  | Super   (`KC_LEFT_GUI`)
+| ]      | `JS_6` (R1)     | `]`
+| [      | `JS_7` (L1)     | `[`
+| /      | `JS_8` (R2)     | `/`
+| 7      | `JS_9`          | `7`
+| 8      | `JS_10`         | `8`
+
+* **Expanded gamepad mode:** Press **Fn+G** to toggle Layer 2. This build exposes 11 joystick buttons total, so games and mappers can use A/B/X/Y, Select/Start, bracket/slash shoulder-style buttons, and two extra number-row buttons.
 
 * **Tap-Hold Keys (Letters, Numbers & Special Characters):** Most alphabetic keys, numbers, and special character keys support tap-hold functionality:
     * **Tap (< 200ms)** — Sends the lowercase letter or base character (e.g., `a`, `1`, `-`)
@@ -191,4 +198,3 @@ For the full license text, see the [LICENSE](LICENSE) file in this repository or
 
 #### 🤝 Acknowledgments
 Special thanks to **[oesmith](https://github.com/oesmith/qmk_firmware)** for the initial groundwork and porting the base layout to the uConsole hardware.
-
