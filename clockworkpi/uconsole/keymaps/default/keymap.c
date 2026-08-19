@@ -6,7 +6,8 @@
 enum {
   LY0 = 0,
   LY1,
-  LY2
+  LY2,
+  LY3
 };
 
 enum {
@@ -66,7 +67,8 @@ enum {
   JS_UP,
   JS_DOWN,
   KB_LOCK,
-  KB_TAP_HOLD      // Toggle tap-hold feature
+  KB_TAP_HOLD,     // Toggle tap-hold feature
+  KB_LAYER_SWITCH  // Fn+G = gamepad; Shift+Fn+G = keyboard gaming
 };
 
 const key_override_t vol_key_override =
@@ -140,14 +142,14 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     [LY1] = LAYOUT(
         KC_PGUP, KC_PGDN, KC_HOME, KC_END,  _______, _______, _______, _______,
-        _______, _______, _______, _______, KC_LGUI, _______, KC_RGUI, _______,
+        _______, _______, _______, _______, _______, _______, _______, _______,
         _______, _______, _______, _______, _______, _______, _______, _______,
 
         KC_PSCR, KC_PAUS, KC_MUTE, _______, _______, _______, KC_F11,  KC_F12,
         KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   KC_F7,   KC_F8,
         KC_F9,   KC_F10,  KB_LOCK, KC_CAPS, _______, _______, _______, _______,
         _______, _______, _______, _______, _______, _______, KC_PGUP, KC_INS,
-        _______, _______, _______, _______, _______, _______, TG(LY2), KC_HOME,
+        _______, _______, _______, _______, _______, _______, KB_LAYER_SWITCH, KC_HOME,
         KC_END,  KC_PGDN, _______, _______, _______, _______, _______, _______,
         _______, _______, KC_BRID, KC_BRIU, _______, _______, _______, _______,
         KC_DEL,  _______, _______, _______, BL_STEP, _______, _______, _______
@@ -177,9 +179,44 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         _______, _______, _______, _______, _______, _______, _______, _______,
         _______, _______, _______, _______, _______, _______, _______, _______
     ),
+
+    /*
+     * Layer 3: Keyboard gaming (Toggled by Shift+Fn+G)
+     *
+     * D-pad: Up=W, Left=A, Down=S, Right=D
+     * Face buttons: Y=Y, B=B, X=X, A=P
+     * All remaining keys fall through to the normal keyboard layers.
+     */
+    [LY3] = LAYOUT(
+        KC_W,    KC_S,    KC_A,    KC_D,    KC_P,    KC_B,    KC_X,    KC_Y,
+        _______, _______, _______, _______, _______, _______, _______, _______,
+        _______, _______, _______, _______, _______, _______, _______, _______,
+
+        _______, _______, _______, _______, _______, _______, _______, _______,
+        _______, _______, _______, _______, _______, _______, _______, _______,
+        _______, _______, _______, _______, _______, _______, _______, _______,
+        _______, _______, _______, _______, _______, _______, _______, _______,
+        _______, _______, _______, _______, _______, _______, _______, _______,
+        _______, _______, _______, _______, _______, _______, _______, _______,
+        _______, _______, _______, _______, _______, _______, _______, _______,
+        _______, _______, _______, _______, _______, _______, _______, _______
+    ),
 };
 
 static bool is_locked = false;
+
+// Gamepad Y/B mouse-arrow emulation state.
+static bool y_pressed = false;
+static bool b_pressed = false;
+static bool y_action_triggered = false;
+static bool b_action_triggered = false;
+static uint16_t y_press_time = 0;
+static uint16_t b_press_time = 0;
+
+static bool up_as_mouse = false;
+static bool down_as_mouse = false;
+static bool left_as_mouse = false;
+static bool right_as_mouse = false;
 
 // D-pad joystick state. Left/Right share axis 1, Up/Down share axis 0.
 // These directions behave like discrete keys rather than a physical d-pad, so
@@ -215,6 +252,16 @@ static void js_update_axes(void) {
     joystick_set_axis(0, 127);
   } else {
     joystick_set_axis(0, 0);
+  }
+}
+
+static void toggle_exclusive_gaming_layer(uint8_t target_layer) {
+  bool enable_target = !layer_state_is(target_layer);
+
+  layer_off(LY2);
+  layer_off(LY3);
+  if (enable_target) {
+    layer_on(target_layer);
   }
 }
 
@@ -395,6 +442,98 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   }
 
   switch (keycode) {
+    case KC_MENU:
+      if (record->event.pressed) {
+        y_pressed = true;
+        y_press_time = record->event.time;
+        y_action_triggered = false;
+      } else {
+        y_pressed = false;
+        if (!layer_state_is(LY2)) {
+          uint16_t elapsed = record->event.time - y_press_time;
+          if (!y_action_triggered && elapsed < TAP_HOLD_TIMEOUT) {
+            register_code(KC_MENU);
+            unregister_code(KC_MENU);
+          }
+        }
+      }
+      return false;
+    case KC_STOP:
+      if (record->event.pressed) {
+        b_pressed = true;
+        b_press_time = record->event.time;
+        b_action_triggered = false;
+      } else {
+        b_pressed = false;
+        if (!layer_state_is(LY2)) {
+          uint16_t elapsed = record->event.time - b_press_time;
+          if (!b_action_triggered && elapsed < TAP_HOLD_TIMEOUT) {
+            register_code(KC_STOP);
+            unregister_code(KC_STOP);
+          }
+        }
+      }
+      return false;
+    case KC_UP:
+      if (record->event.pressed) {
+        if ((y_pressed || b_pressed) && !layer_state_is(LY2)) {
+          y_action_triggered = true;
+          b_action_triggered = true;
+          up_as_mouse = true;
+          register_code(MS_UP);
+          return false;
+        }
+      } else if (up_as_mouse) {
+        unregister_code(MS_UP);
+        up_as_mouse = false;
+        return false;
+      }
+      return true;
+    case KC_DOWN:
+      if (record->event.pressed) {
+        if ((y_pressed || b_pressed) && !layer_state_is(LY2)) {
+          y_action_triggered = true;
+          b_action_triggered = true;
+          down_as_mouse = true;
+          register_code(MS_DOWN);
+          return false;
+        }
+      } else if (down_as_mouse) {
+        unregister_code(MS_DOWN);
+        down_as_mouse = false;
+        return false;
+      }
+      return true;
+    case KC_LEFT:
+      if (record->event.pressed) {
+        if ((y_pressed || b_pressed) && !layer_state_is(LY2)) {
+          y_action_triggered = true;
+          b_action_triggered = true;
+          left_as_mouse = true;
+          register_code(MS_LEFT);
+          return false;
+        }
+      } else if (left_as_mouse) {
+        unregister_code(MS_LEFT);
+        left_as_mouse = false;
+        return false;
+      }
+      return true;
+    case KC_RGHT:
+      if (record->event.pressed) {
+        if ((y_pressed || b_pressed) && !layer_state_is(LY2)) {
+          y_action_triggered = true;
+          b_action_triggered = true;
+          right_as_mouse = true;
+          register_code(MS_RGHT);
+          return false;
+        }
+      } else if (right_as_mouse) {
+        unregister_code(MS_RGHT);
+        right_as_mouse = false;
+        return false;
+      }
+      return true;
     case KB_LOCK:
       if (record->event.pressed) {
         is_locked = !is_locked;
@@ -407,6 +546,18 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         eeconfig_update_user(keyboard_config.raw);
       }
 #endif
+      return false;
+    case KB_LAYER_SWITCH:
+      if (record->event.pressed) {
+        uint8_t active_mods = get_mods() | get_weak_mods() | get_oneshot_mods();
+        if (active_mods & MOD_MASK_SHIFT) {
+          toggle_exclusive_gaming_layer(LY3);
+        } else if (layer_state_is(LY3)) {
+          layer_off(LY3);
+        } else {
+          toggle_exclusive_gaming_layer(LY2);
+        }
+      }
       return false;
     case MO(LY1):
       // Fn: only perform normal layer switching; do not toggle scroll mode

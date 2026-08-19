@@ -46,6 +46,8 @@ Perfect for verifying your firmware installation and familiarizing yourself with
 
 * **Expanded gamepad mode:** Press **Fn+G** to toggle Layer 2. This build exposes 11 joystick buttons total, so games and mappers can use A/B/X/Y, Select/Start, bracket/slash shoulder-style buttons, and two extra number-row buttons.
 
+* **Keyboard gaming mode:** Press **Shift+Fn+G** to toggle Layer 3. The physical D-pad sends `W/A/S/D`, and the face buttons send `Y/B/X/P` (physical A sends `P` to avoid duplicating the D-pad's `A`). All other keys retain their normal behavior. Layer 2 and Layer 3 are mutually exclusive. While Layer 3 is active, either **Fn+G** or **Shift+Fn+G** returns to normal keyboard mode.
+
 * **Tap-Hold Keys (Letters, Numbers & Special Characters):** Most alphabetic keys, numbers, and special character keys support tap-hold functionality:
     * **Tap (< 200ms)** — Sends the lowercase letter or base character (e.g., `a`, `1`, `-`)
     * **Hold (≥ 200ms)** — Sends the uppercase letter or shifted symbol (e.g., `A`, `!`, `_`)
@@ -61,6 +63,12 @@ Perfect for verifying your firmware installation and familiarizing yourself with
       - Modifier and Fn combinations bypass tap-hold, so shortcuts like `Ctrl+A`, `Alt+Tab`, and `Shift+1` behave normally
       - *Note:* In the `clockworkpi_uconsole_no_tap_hold.bin` build, the tap-hold feature is completely compiled out, so `Fn+T+H` does nothing and keys always behave normally.
     * **Note:** Game keys (X, Y, A, B, Select, Start) and direction keys (Up, Down, Left, Right) do NOT have tap-hold behavior to preserve their functionality for gaming
+
+* **D-Pad / Directional Keys:** The physical directional keys change functions based on the active mode:
+    * **Keyboard mode:** Standard arrow keys.
+    * **Mouse cursor emulation:** Hold physical button **Y** or **B** and use the D-pad to move the cursor.
+    * **Gamepad mode (`Fn+G`):** Virtual joystick axes.
+    * **Keyboard gaming mode (`Shift+Fn+G`):** `W/A/S/D` movement keys.
 
 * **Trackball Scrolling:** Hold the **Select** key and move the trackball to scroll.
     * Move Up/Down for Vertical Scroll
